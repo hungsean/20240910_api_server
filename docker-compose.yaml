@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-      - ./src:/app/src
-      - ./assets:/app/assets
     environment:
       - ASSETS_PATH=/app/assets
-    command: bash -c ". venv/bin/activate && python src/__main__.py"
+    volumes:
+      - ./assets:/app/assets
+      - ./src:/app/src
+    command: python src/__main__.py
