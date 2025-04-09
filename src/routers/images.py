@@ -10,18 +10,26 @@ router = APIRouter()
 
 limiter = Limiter(key_func=get_remote_address)
 
-IMAGE_FOLDER = "asset\\images"
-IMAGE_DB = "asset\\database\\image_info.db"
+IMAGE_FOLDER = "./assets/images"
+IMAGE_DB = "./assets/database/image_info.db"
 
 def get_random_image_from_class(input_class):
     """從資料庫中根據 class 隨機獲取圖片檔案名"""
-    conn = sqlite3.connect(IMAGE_DB)
-    cursor = conn.cursor()
+    try:
+        # 使用 URI 模式，並設定只讀模式防止自動創建資料庫
+        conn = sqlite3.connect(f"file:{IMAGE_DB}?mode=ro", uri=True)
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT filename FROM images WHERE class=? ORDER BY RANDOM() LIMIT 1", (input_class,))
-    result_image_filename = cursor.fetchone()
+        cursor.execute("SELECT filename FROM images WHERE class=? ORDER BY RANDOM() LIMIT 1", (input_class,))
+        result_image_filename = cursor.fetchone()
 
-    conn.close()
+    except sqlite3.OperationalError as e:
+        # 如果資料庫不存在或者無法連線，將會觸發例外
+        raise FileNotFoundError(f"Database not found: {IMAGE_DB}") from e
+
+    finally:
+        # 確保即使發生例外，也會關閉連線
+        conn.close()
 
     if result_image_filename:
         return result_image_filename[0]
